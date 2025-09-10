@@ -9,21 +9,16 @@ class TaskPage(ttk.Frame):
         self.task_key = task_key
         self.task_title = task_title
 
-        # Top toolbar stack
         self.toolbar = ttk.Frame(self, padding=(10,10))
         self.toolbar.pack(fill=tk.X)
 
-        # Player area
         self.player = VideoPlayer(self)
         self.player.pack(fill=tk.BOTH, expand=True)
 
-        # Status bar
         self.status = ttk.Label(self, text=f"Ready — {task_title}", anchor=tk.W)
         self.status.pack(fill=tk.X)
 
         self._build_controls()
-
-        # Poll for ROI updates (optional label could be added)
         self.after(200, self._poll_roi)
 
     def _poll_roi(self):

@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 from ui.style import configure_style, APP_TITLE, APP_MIN_W, APP_MIN_H
 from tasks.base import TaskPage
 from tasks.object_tracking import ObjectTrackingPage
+from tasks.face_id import FaceIDPage
 
 TASKS = [
     ("LPR", "License Plate Recognition"),
@@ -72,6 +73,8 @@ class App(tk.Tk):
         if key not in self.pages:
             if key == "Object Tracking":
                 page = ObjectTrackingPage(self.tabs)
+            elif key == "Face ID":
+                page = FaceIDPage(self.tabs)
             else:
                 page = TaskPage(self.tabs, key, title)
             self.pages[key] = page
@@ -84,7 +87,7 @@ class App(tk.Tk):
         messagebox.showinfo("Settings", "Global settings dialog can go here.")
 
     def _about(self):
-        messagebox.showinfo("About", "AI Safety Vision Demo (modular)\nUse Object Tracking tab to try YOLO+tracker.")
+        messagebox.showinfo("About", "AI Safety Vision Demo (modular)\nUse Face ID and Object Tracking tabs.")
 
 def main():
     app = App()

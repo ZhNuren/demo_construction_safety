@@ -7,7 +7,6 @@ except Exception:
     YOLO = None
 
 class YOLODetector:
-    """Thin wrapper around Ultralytics YOLOv8n for object detection."""
     def __init__(self, model_name: str = "yolov8n.pt", conf: float = 0.35, imgsz: int = 640):
         if YOLO is None:
             raise ImportError("Ultralytics not installed. Run: pip install ultralytics")
@@ -15,9 +14,7 @@ class YOLODetector:
         self.conf = conf
         self.imgsz = imgsz
 
-    def detect_xyxy(self, frame: np.ndarray, classes: Optional[List[int]] = None
-                    ) -> Tuple[list, list, list]:
-        """Returns (boxes_xyxy[int], scores[float], classes[int])"""
+    def detect_xyxy(self, frame, classes: Optional[List[int]] = None) -> Tuple[list, list, list]:
         res = self.model.predict(frame, verbose=False, conf=self.conf, imgsz=self.imgsz)[0]
         boxes = res.boxes
         xyxy = boxes.xyxy.cpu().numpy().astype(int).tolist()

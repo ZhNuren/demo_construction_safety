@@ -3,7 +3,8 @@
 A modular Tkinter desktop app scaffold for computer-vision safety demos:
 - Separate **tabs** per task (LPR, FaceID, Object Detection, Tracking, etc.)
 - Reusable **VideoPlayer** with ROI drawing and an `on_frame` hook
-- **Object Tracking** powered by Ultralytics YOLOv8n detections + a tiny IoU tracker
+- **Object Tracking** powered by Ultralytics YOLOv8n + a tiny IoU tracker
+- **Face ID** enrollment (image + label + "Not allowed") and live recognition via InsightFace
 
 ## Quickstart
 
@@ -12,29 +13,33 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open the **Object Tracking** tab, load a video, and click **Start tracking**.
+Open **Face ID** tab to enroll and recognize.  
+Open **Object Tracking** to see multi-object tracking with trails.
 
 ## Structure
 
 ```
 ai_safety_vision_demo/
-├─ app.py                      # Main entry
-├─ requirements.txt            # Minimal deps
+├─ app.py
+├─ requirements.txt
+├─ README.md
 ├─ ui/
-│  ├─ video_player.py          # Canvas + video loop + ROI drawing
-│  ├─ toolbars.py              # Media + ROI toolbars
-│  └─ style.py                 # Ttk styles and layout helpers
+│  ├─ video_player.py
+│  ├─ toolbars.py
+│  └─ style.py
 ├─ tasks/
-│  ├─ base.py                  # TaskPage base class
-│  └─ object_tracking.py       # YOLOv8n + SimpleTracker integration
+│  ├─ base.py
+│  ├─ object_tracking.py
+│  └─ face_id.py
 ├─ models/
-│  └─ detector.py              # YOLO wrapper (lazy init)
+│  ├─ detector.py           # YOLO
+│  └─ faceid.py             # InsightFace enroll + identify
 └─ tracking/
-   └─ simple_tracker.py        # IoU-based multi-object tracker with trails
+   └─ simple_tracker.py
 ```
 
 ## Notes
 
-- YOLO model downloads on first run. If you want another model (ByteTrack/DeepSORT),
-  replace the tracker while keeping the `on_frame` hook.
-- To filter classes (e.g., only person/animal), see `tasks/object_tracking.py`.
+- YOLO + InsightFace download models on first run.
+- Face DB is a simple `faces_db.json` next to `app.py`. Delete it to reset.
+- You can swap the IoU tracker with ByteTrack/DeepSORT later without changing the UI hooks.

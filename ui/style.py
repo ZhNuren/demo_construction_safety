@@ -10,7 +10,6 @@ def configure_style(root: tk.Tk):
         root.call("tk", "scaling", 1.25)
     except Exception:
         pass
-    # Use default theme but tweak fonts/colors
     style.configure("H1.TLabel", font=("Helvetica", 18, "bold"))
     style.configure("Subtle.TLabel", foreground="#6b7280")
     style.configure("Status.TLabel", foreground="#94a3b8")

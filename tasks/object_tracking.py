@@ -29,7 +29,6 @@ class ObjectTrackingPage(TaskPage):
                      values=["all", "person-only", "animal-ish"],
                      textvariable=self.class_mode).grid(row=1, column=1, columnspan=2, sticky="w", pady=(6,0))
 
-    # ---- actions ----
     def _ensure_detector(self):
         if self._detector is None:
             try:
@@ -58,13 +57,11 @@ class ObjectTrackingPage(TaskPage):
     def _cls_filter(self):
         mode = self.class_mode.get()
         if mode == "person-only":
-            return [0]  # COCO person
+            return [0]
         elif mode == "animal-ish":
-            # COCO animal-ish class ids
-            return [14,15,16,17,18,19,20,21,22,23]  # bird->zebra
+            return [14,15,16,17,18,19,20,21,22,23]
         return None
 
-    # ---- per-frame processing ----
     def _process_tracking_frame(self, frame: np.ndarray) -> np.ndarray:
         if not self._tracker_enabled: return frame
         det = self._ensure_detector()

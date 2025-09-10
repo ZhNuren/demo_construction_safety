@@ -25,14 +25,12 @@ class VideoPlayer(ttk.Frame):
         self._stop = True
         self._loop_thread: Optional[threading.Thread] = None
 
-        # Hook to process each frame (e.g., detection/tracking overlays)
         self.on_frame: Optional[Callable[[np.ndarray], np.ndarray]] = None
 
-        # ROI state
         self._drawing = False
         self._roi_start: Optional[Tuple[int,int]] = None
         self._roi_rect_id: Optional[int] = None
-        self._roi: Optional[Tuple[int,int,int,int]] = None  # x1,y1,x2,y2
+        self._roi: Optional[Tuple[int,int,int,int]] = None
 
         self.canvas.bind("<Configure>", lambda e: self._render_frame())
 
@@ -72,8 +70,7 @@ class VideoPlayer(ttk.Frame):
         self._roi = (min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1))
         self._drawing = False
 
-    def get_roi(self):
-        return self._roi
+    def get_roi(self): return self._roi
 
     def clear_roi(self):
         self._roi = None
@@ -105,8 +102,7 @@ class VideoPlayer(ttk.Frame):
         self._frame = img
         self._render_frame()
 
-    def pause(self):
-        self._stop = True
+    def pause(self): self._stop = True
 
     def resume(self):
         if self._cap is not None and self._stop:
