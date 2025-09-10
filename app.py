@@ -41,6 +41,8 @@ class App(tk.Tk):
         self.tabs = ttk.Notebook(self.content)
         self.tabs.grid(row=1, column=0, sticky="nsew")
 
+        self.tabs.bind("<<NotebookTabChanged>>", self._on_tab_change)
+
         self.pages = {}
         self._build_footer(self.content).grid(row=2, column=0, sticky="ew")
 
@@ -89,6 +91,14 @@ class App(tk.Tk):
     def _about(self):
         messagebox.showinfo("About", "AI Safety Vision Demo (modular)\nUse Face ID and Object Tracking tabs.")
 
+    def _on_tab_change(self, event):
+        # Keep only the selected tab active; close sources in others.
+        current_tab_id = self.tabs.select()
+        for page in self.pages.values():
+            if str(page) != current_tab_id:
+                # This tab is not selected → ensure streams are closed
+                if hasattr(page, "cleanup"):
+                    page.cleanup()
 def main():
     app = App()
     app.mainloop()

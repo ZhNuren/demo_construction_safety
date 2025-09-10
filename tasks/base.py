@@ -32,3 +32,10 @@ class TaskPage(ttk.Frame):
 
     def notify(self, msg: str):
         self.status.configure(text=f"{self.task_title}: {msg}")
+    
+    def cleanup(self):
+        """Called when the tab is hidden or app closes."""
+        try:
+            self.player.close()
+        except Exception:
+            pass

@@ -15,26 +15,57 @@ class FaceIDPage(TaskPage):
         self._recognition_enabled = False
 
     def _build_controls(self):
+        # Keep the common media toolbar + ROI (from base)
         super()._build_controls()
-        ttk.Separator(self.toolbar, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=12)
 
-        enroll = ttk.Frame(self.toolbar)
-        enroll.pack(side=tk.LEFT)
-        ttk.Label(enroll, text="Name:").grid(row=0, column=0, sticky="w")
+        # Replace long, wide toolbar with a compact notebook
+        nb = ttk.Notebook(self.toolbar)
+        nb.pack(side=tk.LEFT, padx=8)
+
+        # --- Enroll tab ---
+        tab_enroll = ttk.Frame(nb)
+        nb.add(tab_enroll, text="Enroll")
+
+        frm_e = ttk.Frame(tab_enroll, padding=(6,6))
+        frm_e.pack(fill=tk.X)
+
+        ttk.Label(frm_e, text="Name:").grid(row=0, column=0, sticky="w")
         self.name_var = tk.StringVar()
-        ttk.Entry(enroll, textvariable=self.name_var, width=16).grid(row=0, column=1, padx=(4,8))
+        ttk.Entry(frm_e, textvariable=self.name_var, width=16).grid(row=0, column=1, padx=(4,8))
         self.na_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(enroll, text="Not allowed", variable=self.na_var).grid(row=0, column=2, padx=(0,8))
-        ttk.Button(enroll, text="Upload & Enroll", command=self._upload_and_enroll).grid(row=0, column=3)
+        ttk.Checkbutton(frm_e, text="Not allowed", variable=self.na_var).grid(row=0, column=2, padx=(0,8))
+        ttk.Button(frm_e, text="Upload & Enroll", command=self._upload_and_enroll).grid(row=0, column=3, padx=(4,0))
 
-        ttk.Separator(self.toolbar, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=12)
-        ctrl = ttk.Frame(self.toolbar)
-        ctrl.pack(side=tk.LEFT)
-        ttk.Button(ctrl, text="Start recognition", command=self._start).grid(row=0, column=0)
-        ttk.Button(ctrl, text="Stop", command=self._stop).grid(row=0, column=1, padx=6)
-        ttk.Label(ctrl, text="Threshold").grid(row=0, column=2, padx=(8,4))
+        # --- Run tab (recognition + sources) ---
+        tab_run = ttk.Frame(nb)
+        nb.add(tab_run, text="Run")
+
+        frm_r1 = ttk.Frame(tab_run, padding=(6,6))   # row 1: run buttons + threshold
+        frm_r1.pack(fill=tk.X)
+        ttk.Button(frm_r1, text="Start", command=self._start).grid(row=0, column=0)
+        ttk.Button(frm_r1, text="Stop", command=self._stop).grid(row=0, column=1, padx=(6,0))
+
+        ttk.Label(frm_r1, text="Thr").grid(row=0, column=2, padx=(10,4))
         self.thr = tk.DoubleVar(value=0.35)
-        ttk.Spinbox(ctrl, from_=0.1, to=0.9, increment=0.01, width=6, textvariable=self.thr).grid(row=0, column=3)
+        ttk.Spinbox(frm_r1, from_=0.1, to=0.9, increment=0.01, width=6,
+                    textvariable=self.thr).grid(row=0, column=3)
+
+        # row 2: camera + screen options (stacked below)
+        frm_r2 = ttk.Frame(tab_run, padding=(6,0))
+        frm_r2.pack(fill=tk.X, pady=(4,0))
+
+        # Camera
+        ttk.Label(frm_r2, text="Cam").grid(row=0, column=0, sticky="w")
+        self.cam_idx = tk.IntVar(value=0)
+        ttk.Spinbox(frm_r2, from_=0, to=10, width=4, textvariable=self.cam_idx).grid(row=0, column=1, padx=(4,8))
+        ttk.Button(frm_r2, text="Open Camera", command=self._open_camera).grid(row=0, column=2)
+
+        # Screen
+        ttk.Label(frm_r2, text="FPS").grid(row=0, column=3, padx=(10,4))
+        self.scr_fps = tk.IntVar(value=20)
+        ttk.Spinbox(frm_r2, from_=5, to=60, width=4, textvariable=self.scr_fps).grid(row=0, column=4, padx=(0,8))
+        ttk.Button(frm_r2, text="Share Screen", command=self._open_screen).grid(row=0, column=5)
+
 
     def _ensure_identifier(self):
         if self._identifier is None:
@@ -79,6 +110,17 @@ class FaceIDPage(TaskPage):
         self._recognition_enabled = False
         self.player.on_frame = None
         self.notify("Recognition stopped")
+    
+    def _open_camera(self):
+        idx = int(self.cam_idx.get())
+        self.player.open_camera(index=idx)
+        self.notify(f"Camera opened (index {idx})")
+
+    def _open_screen(self):
+        fps = int(self.scr_fps.get())
+        # Full primary monitor. For a region: pass region=(left, top, width, height)
+        self.player.open_screen(monitor=1, fps=fps, region=None)
+        self.notify(f"Screen sharing started ({fps} FPS)")
 
     def _process_frame(self, frame: np.ndarray) -> np.ndarray:
         if not self._recognition_enabled:

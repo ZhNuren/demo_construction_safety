@@ -2,7 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 
 APP_TITLE = "AI Safety Vision — Demo Console"
-APP_MIN_W, APP_MIN_H = 1200, 760
+APP_MIN_W, APP_MIN_H = 980, 760
+
 
 def configure_style(root: tk.Tk):
     style = ttk.Style()
