@@ -233,8 +233,7 @@ class VideoPlayer(ttk.Frame):
                     if self._screen_ctx is None or self._screen_monitor is None:
                         break
                     shot = self._screen_ctx.grab(self._screen_monitor)  # BGRA
-                    frame = np.array(shot)[:, :, :3]
-                    frame = frame[:, :, ::-1].copy()  # to BGR
+                    frame = np.array(shot)[:, :, :3].copy()  # -> BGR (drop alpha), NO channel reversal
 
                 else:
                     break
