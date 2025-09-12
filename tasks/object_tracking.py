@@ -8,6 +8,21 @@ from .base import TaskPage
 from models.detector import YOLODetector
 from tracking.simple_tracker import SimpleTracker
 
+
+COCO_CLASSES = [
+    "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat",
+    "traffic light", "fire hydrant", "stop sign", "parking meter", "bench",
+    "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe",
+    "backpack", "umbrella", "handbag", "tie", "suitcase",
+    "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove",
+    "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife",
+    "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog",
+    "pizza", "donut", "cake", "chair", "couch", "potted plant", "bed", "dining table", "toilet",
+    "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster",
+    "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier",
+    "toothbrush"
+]
+
 class ObjectTrackingPage(TaskPage):
     def __init__(self, master, **kwargs):
         super().__init__(master, task_key="Object Tracking", task_title="Tracking with trails", **kwargs)
@@ -44,7 +59,7 @@ class ObjectTrackingPage(TaskPage):
                 except Exception:
                     device = "cpu"
 
-                self._detector = YOLODetector("yolov8n.pt", conf=0.35, imgsz=640, device=device)
+                self._detector = YOLODetector("yolo11x.pt", conf=0.35, imgsz=640, device=device)
                 if device == "mps":
                     self.notify("YOLO on MPS (Apple GPU)")
                 else:
@@ -90,19 +105,51 @@ class ObjectTrackingPage(TaskPage):
         return None
 
     def _process_tracking_frame(self, frame: np.ndarray) -> np.ndarray:
-        if not self._tracker_enabled: return frame
+        if not self._tracker_enabled:
+            return frame
         det = self._ensure_detector()
-        if det is None: return frame
+        if det is None:
+            return frame
 
         xyxy, scores, clss = det.detect_xyxy(frame, classes=self._cls_filter())
-        tracks = self._tracker.update([tuple(map(int,b)) for b in xyxy], scores)
+
+        # Convert to int bboxes and include class info
+        dets = [(tuple(map(int, b)), float(s), int(c)) for b, s, c in zip(xyxy, scores, clss)]
+        tracks = self._tracker.update([d[0] for d in dets], [d[1] for d in dets])
+
+        # Attach class IDs to tracks (simple: match order of detections)
+        for (bbox, _, cls), (tid, tr) in zip(dets, tracks.items()):
+            tr['cls'] = cls
+
+        # Define some colors for classes
+        def class_color(cls_id: int) -> tuple[int,int,int]:
+            # Person (0) = green, animals = orange, others = blue
+            if cls_id == 0:
+                return (50, 205, 50)  # lime green
+            elif 14 <= cls_id <= 23:
+                return (0, 140, 255)  # orange
+            else:
+                return (255, 128, 0)  # cyan
 
         for tid, tr in tracks.items():
-            x1,y1,x2,y2 = tr['bbox']
-            cv2.rectangle(frame, (x1,y1), (x2,y2), (50,205,50), 2)
-            cv2.putText(frame, f"ID {tid}", (x1, max(20,y1-6)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)
+            x1, y1, x2, y2 = tr['bbox']
+            cls_id = tr.get('cls', -1)
+            color = class_color(cls_id)
+
+            # Get human-readable class name
+            cls_name = COCO_CLASSES[cls_id] if 0 <= cls_id < len(COCO_CLASSES) else f"cls{cls_id}"
+
+            # Draw bounding box
+            cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+
+            # Draw label: ID + class name
+            label = f"ID {tid} {cls_name}"
+            cv2.putText(frame, label, (x1, max(20, y1-6)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+
+            # Draw trail
             pts = list(tr['trail'])
             for i in range(1, len(pts)):
-                cv2.line(frame, pts[i-1], pts[i], (50,205,50), 2)
+                cv2.line(frame, pts[i-1], pts[i], color, 2)
+
         return frame

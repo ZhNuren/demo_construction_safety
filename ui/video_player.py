@@ -79,11 +79,35 @@ class VideoPlayer(ttk.Frame):
             )
 
     def _on_mouse_up(self, event):
-        if not self._drawing: return
+        if not self._drawing:
+            return
         x0, y0 = self._roi_start
         x1, y1 = event.x, event.y
-        self._roi = (min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1))
         self._drawing = False
+
+        # Map canvas coords back to frame coords
+        if self._frame is not None:
+            h, w, _ = self._frame.shape
+            cw, ch = self.canvas.winfo_width(), self.canvas.winfo_height()
+            scale = min(cw / w, ch / h) if w and h and cw and ch else 1
+            nw, nh = max(1, int(w * scale)), max(1, int(h * scale))
+
+            # offset to center
+            x_offset = (cw - nw) // 2
+            y_offset = (ch - nh) // 2
+
+            # transform canvas → frame coords
+            def to_frame_coords(cx, cy):
+                fx = int((cx - x_offset) / scale)
+                fy = int((cy - y_offset) / scale)
+                return max(0, fx), max(0, fy)
+
+            fx0, fy0 = to_frame_coords(x0, y0)
+            fx1, fy1 = to_frame_coords(x1, y1)
+            self._roi = (min(fx0, fx1), min(fy0, fy1), max(fx0, fx1), max(fy0, fy1))
+        else:
+            self._roi = (min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1))
+
 
     def get_roi(self): return self._roi
 

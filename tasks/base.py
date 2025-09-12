@@ -27,8 +27,7 @@ class TaskPage(ttk.Frame):
     def _build_controls(self):
         MediaToolbar(self.toolbar, self.player, allow_image=True).pack(side=tk.LEFT)
         ttk.Separator(self.toolbar, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=12)
-        if self.task_key in {"Behavior/Intrusion", "Object Tracking", "Object Detection", "Crowd Counting", "PPE", "Load Lifting", "Fire/Smoke"}:
-            ROIControls(self.toolbar, self.player).pack(side=tk.LEFT)
+        
 
     def notify(self, msg: str):
         self.status.configure(text=f"{self.task_title}: {msg}")

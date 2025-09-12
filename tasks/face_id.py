@@ -10,15 +10,15 @@ from models.faceid import FaceIdentifier
 
 class FaceIDPage(TaskPage):
     def __init__(self, master, **kwargs):
-        super().__init__(master, task_key="Face ID", task_title="Face Identification", **kwargs)
-        self._identifier: Optional[FaceIdentifier] = None
+        self._identifier: Optional[FaceIdentifier] = None  # init before super().__init__
         self._recognition_enabled = False
+        super().__init__(master, task_key="Face ID", task_title="Face Identification", **kwargs)
 
     def _build_controls(self):
         # Keep the common media toolbar + ROI (from base)
         super()._build_controls()
 
-        # Replace long, wide toolbar with a compact notebook
+        # Replace long, wide toolbar with a compƒact notebook
         nb = ttk.Notebook(self.toolbar)
         nb.pack(side=tk.LEFT, padx=8)
 
@@ -50,6 +50,26 @@ class FaceIDPage(TaskPage):
         ttk.Spinbox(frm_r1, from_=0.1, to=0.9, increment=0.01, width=6,
                     textvariable=self.thr).grid(row=0, column=3)
 
+            # --- Database tab ---
+        tab_db = ttk.Frame(nb)
+        nb.add(tab_db, text="Database")
+
+        frm_db = ttk.Frame(tab_db, padding=(6,6))
+        frm_db.pack(fill=tk.X)
+
+        ttk.Label(frm_db, text="Allowed").grid(row=0, column=0)
+        self.allowed_list = tk.Listbox(frm_db, height=5, width=16, exportselection=False)
+        self.allowed_list.grid(row=1, column=0, padx=4)
+        ttk.Button(frm_db, text="Delete", command=lambda: self._delete_selected(self.allowed_list)).grid(row=2, column=0, pady=(2,0))
+
+        ttk.Label(frm_db, text="Not Allowed").grid(row=0, column=1)
+        self.not_allowed_list = tk.Listbox(frm_db, height=5, width=16, exportselection=False)
+        self.not_allowed_list.grid(row=1, column=1, padx=4)
+        ttk.Button(frm_db, text="Delete", command=lambda: self._delete_selected(self.not_allowed_list)).grid(row=2, column=1, pady=(2,0))
+
+        # Refresh lists when UI is built
+        self._refresh_lists()
+
         # row 2: camera + screen options (stacked below)
         frm_r2 = ttk.Frame(tab_run, padding=(6,0))
         frm_r2.pack(fill=tk.X, pady=(4,0))
@@ -66,6 +86,30 @@ class FaceIDPage(TaskPage):
         ttk.Spinbox(frm_r2, from_=5, to=60, width=4, textvariable=self.scr_fps).grid(row=0, column=4, padx=(0,8))
         ttk.Button(frm_r2, text="Share Screen", command=self._open_screen).grid(row=0, column=5)
 
+
+    def _refresh_lists(self):
+        ident = self._ensure_identifier()
+        if ident is None:
+            return
+        self.allowed_list.delete(0, tk.END)
+        self.not_allowed_list.delete(0, tk.END)
+        for rec in ident.list_identities():
+            if rec["not_allowed"]:
+                self.not_allowed_list.insert(tk.END, rec["name"])
+            else:
+                self.allowed_list.insert(tk.END, rec["name"])
+
+    def _delete_selected(self, listbox):
+        ident = self._ensure_identifier()
+        if ident is None:
+            return
+        sel = listbox.curselection()
+        if not sel:
+            return
+        name = listbox.get(sel[0])
+        ident.delete_identity(name)
+        self._refresh_lists()
+        self.notify(f"Deleted {name}")
 
     def _ensure_identifier(self):
         if self._identifier is None:
@@ -98,6 +142,9 @@ class FaceIDPage(TaskPage):
             messagebox.showwarning("No face detected", "Couldn't detect a face in that image.")
         else:
             self.notify(f"Enrolled: {self.name_var.get().strip()} ({'NOT ALLOWED' if self.na_var.get() else 'allowed'})")
+        
+        self._refresh_lists()
+
 
     def _start(self):
         if self._ensure_identifier() is None:
