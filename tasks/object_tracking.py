@@ -12,7 +12,7 @@ class ObjectTrackingPage(TaskPage):
     def __init__(self, master, **kwargs):
         super().__init__(master, task_key="Object Tracking", task_title="Tracking with trails", **kwargs)
         self._tracker_enabled = False
-        self._tracker = SimpleTracker(max_lost=20, iou_thr=0.35, trail=40)
+        self._tracker = SimpleTracker(max_lost=20, iou_thr=0.35, trail=120)
         self._detector: Optional[YOLODetector] = None
 
     def _build_controls(self):
@@ -28,11 +28,27 @@ class ObjectTrackingPage(TaskPage):
         ttk.Combobox(section, state="readonly", width=12,
                      values=["all", "person-only", "animal-ish"],
                      textvariable=self.class_mode).grid(row=1, column=1, columnspan=2, sticky="w", pady=(6,0))
+        ttk.Label(section, text="Trail").grid(row=2, column=0, pady=(6,0))
+        self.trail_len = tk.IntVar(value=120)
+        ttk.Spinbox(section, from_=10, to=1000, width=6, textvariable=self.trail_len).grid(row=2, column=1, sticky="w", pady=(6,0))
+        ttk.Button(section, text="Apply", command=self._apply_trail_len).grid(row=2, column=2, padx=(6,0), pady=(6,0))
 
     def _ensure_detector(self):
         if self._detector is None:
             try:
-                self._detector = YOLODetector("yolov8n.pt", conf=0.35, imgsz=640)
+                device = "mps"
+                try:
+                    import torch
+                    if not (hasattr(torch.backends, "mps") and torch.backends.mps.is_available()):
+                        device = "cpu"
+                except Exception:
+                    device = "cpu"
+
+                self._detector = YOLODetector("yolov8n.pt", conf=0.35, imgsz=640, device=device)
+                if device == "mps":
+                    self.notify("YOLO on MPS (Apple GPU)")
+                else:
+                    self.notify("YOLO on CPU (MPS not available)")
             except Exception as e:
                 messagebox.showerror("Detector init failed", str(e))
                 return None
@@ -53,6 +69,17 @@ class ObjectTrackingPage(TaskPage):
         for tr in self._tracker.tracks.values():
             tr['trail'].clear()
         self.notify("Trails cleared")
+    
+    def _apply_trail_len(self):
+        n = int(self.trail_len.get())
+        n = max(5, min(2000, n))
+        # Update tracker default
+        self._tracker.trail = n
+        # Rebuild each track's deque with new maxlen
+        from collections import deque
+        for tr in self._tracker.tracks.values():
+            tr['trail'] = deque(tr['trail'], maxlen=n)
+        self.notify(f"Trail length set to {n}")
 
     def _cls_filter(self):
         mode = self.class_mode.get()

@@ -46,6 +46,7 @@ class VideoPlayer(ttk.Frame):
         self._lock = threading.RLock()   # <-- ADD
         self._black_on_close = True   # preference: show black when closed
         self._show_black = False      # state flag
+        self._last_source = {"mode": "none"}   # remembers args to restart (file/camera/screen)
 
     # ROI drawing
     def enable_roi_draw(self):
@@ -101,6 +102,7 @@ class VideoPlayer(ttk.Frame):
     # Video controls
     def open(self, path: str):
         self._show_black = False
+        self._last_source = {"mode": "file", "path": path}   # <-- add
         if cv2 is None:
             messagebox.showwarning("Dependency missing", "Install opencv-python and pillow for video preview")
             return
@@ -123,6 +125,7 @@ class VideoPlayer(ttk.Frame):
 
     def open_camera(self, index: int = 0):
         self._show_black = False
+        self._last_source = {"mode": "camera", "index": int(index)}  # <-- add
         if cv2 is None:
             messagebox.showwarning("Dependency missing", "Install opencv-python for camera")
             return
@@ -141,6 +144,9 @@ class VideoPlayer(ttk.Frame):
         region: (left, top, width, height)
         """
         self._show_black = False
+        self._last_source = {
+            "mode": "screen", "monitor": int(monitor), "fps": int(fps), "region": region
+        }
         if mss is None:
             messagebox.showwarning("Dependency missing", "Install mss for screen capture")
             return
@@ -159,6 +165,41 @@ class VideoPlayer(ttk.Frame):
         self._start_loop()
 
     def pause(self): self._stop = True
+
+    def restart(self):
+        """
+        Restart the current source.
+        - file: re-open from the beginning
+        - camera/screen: re-open with the same parameters
+        """
+        mode = self._last_source.get("mode", "none")
+        if mode == "none":
+            return
+
+        # Stop current loop & release cleanly
+        self.close()
+        self._show_black = False
+
+        try:
+            if mode == "file":
+                path = self._last_source.get("path")
+                if path:
+                    self.open(path)
+            elif mode == "camera":
+                idx = self._last_source.get("index", 0)
+                self.open_camera(index=idx)
+            elif mode == "screen":
+                mon = self._last_source.get("monitor", 0)
+                fps = self._last_source.get("fps", 20)
+                region = self._last_source.get("region", None)
+                self.open_screen(monitor=mon, fps=fps, region=region)
+        except Exception as e:
+            # If anything fails, fall back to black screen
+            print("restart error:", e)
+            self._show_black = True
+            self._frame = None
+            self._render_frame()
+
 
     def resume(self):
         self._show_black = False
