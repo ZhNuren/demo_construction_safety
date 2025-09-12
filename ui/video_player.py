@@ -47,6 +47,7 @@ class VideoPlayer(ttk.Frame):
         self._black_on_close = True   # preference: show black when closed
         self._show_black = False      # state flag
         self._last_source = {"mode": "none"}   # remembers args to restart (file/camera/screen)
+        self._infer_lock = threading.RLock()
 
     # ROI drawing
     def enable_roi_draw(self):
@@ -178,6 +179,10 @@ class VideoPlayer(ttk.Frame):
 
         # Stop current loop & release cleanly
         self.close()
+        # ✅ Ensure no inference is running
+        if hasattr(self, "_infer_lock"):
+            with self._infer_lock:
+                pass  # wait until any active on_frame finishes 
         self._show_black = False
 
         try:
@@ -222,6 +227,10 @@ class VideoPlayer(ttk.Frame):
                 pass
         self._loop_thread = None
 
+        # wait until on_frame finishes
+        if hasattr(self, "_infer_lock"):
+            with self._infer_lock:
+                pass
         # Release resources
         if self._cap is not None:
             try: self._cap.release()
@@ -284,7 +293,8 @@ class VideoPlayer(ttk.Frame):
                 # Apply processing hook
                 if self.on_frame is not None:
                     try:
-                        self._frame = self.on_frame(self._frame)
+                        with self._infer_lock:           # <-- lock
+                            self._frame = self.on_frame(self._frame)
                     except Exception as e:
                         print("on_frame error:", e)
 

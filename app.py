@@ -4,6 +4,8 @@ from ui.style import configure_style, APP_TITLE, APP_MIN_W, APP_MIN_H
 from tasks.base import TaskPage
 from tasks.object_tracking import ObjectTrackingPage
 from tasks.face_id import FaceIDPage
+from tasks.lpr import LPRPage
+
 
 TASKS = [
     ("LPR", "License Plate Recognition"),
@@ -77,6 +79,8 @@ class App(tk.Tk):
                 page = ObjectTrackingPage(self.tabs)
             elif key == "Face ID":
                 page = FaceIDPage(self.tabs)
+            elif key == "LPR":
+                page = LPRPage(self.tabs)
             else:
                 page = TaskPage(self.tabs, key, title)
             self.pages[key] = page
