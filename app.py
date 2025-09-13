@@ -8,6 +8,8 @@ from tasks.lpr import LPRPage
 from tasks.crowd import CrowdPage
 from tasks.ppe import PPEPage
 from tasks.smoke_fire import SmokeFirePage
+from tasks.no_plate import NoPlatePage
+
 TASKS = [
     ("LPR", "License Plate Recognition"),
     ("Face ID", "Face Identification"),
@@ -88,6 +90,8 @@ class App(tk.Tk):
                 page = PPEPage(self.tabs)
             elif key == "Fire/Smoke":
                 page = SmokeFirePage(self.tabs)
+            elif key == "Tricycle Plates":
+                page = NoPlatePage(self.tabs)
             else:
                 page = TaskPage(self.tabs, key, title)
             self.pages[key] = page
