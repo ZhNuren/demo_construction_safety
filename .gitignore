@@ -1,3 +1,4 @@
 #all files ending .pt, .json for gitignore
 *.pt
 *.json
+videos/*

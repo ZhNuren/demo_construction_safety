@@ -379,8 +379,4 @@ class VideoPlayer(ttk.Frame):
         self._tk_img = ImageTk.PhotoImage(image=img)
         self.canvas.delete("all")
         self.canvas.create_image(cw//2, ch//2, image=self._tk_img, anchor=tk.CENTER)
-        if self._roi is not None:
-            x0,y0,x1,y1 = self._roi
-            self._roi_rect_id = self.canvas.create_rectangle(
-                x0,y0,x1,y1, outline="#4ade80", width=2, dash=(4,2)
-            )
+        
