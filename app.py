@@ -7,6 +7,8 @@ from tasks.face_id import FaceIDPage
 from tasks.lpr import LPRPage
 from tasks.crowd import CrowdPage
 from tasks.objects import ObjectsPage
+from tasks.violence import ViolencePage
+from tasks.load_lifting import CraneTrackingPage
 
 
 TASKS = [
@@ -87,6 +89,10 @@ class App(tk.Tk):
                 page = CrowdPage(self.tabs)
             elif key == "Object Detection":
                 page = ObjectsPage(self.tabs)
+            elif key == "Behavior/Intrusion":
+                page = ViolencePage(self.tabs)
+            elif key == "Load Lifting":
+                page = CraneTrackingPage(self.tabs)
             else:
                 page = TaskPage(self.tabs, key, title)
             self.pages[key] = page

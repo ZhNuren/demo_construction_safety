@@ -144,6 +144,7 @@ class ObjectTrackingPage(TaskPage):
 
             # Draw label: ID + class name
             label = f"ID {tid} {cls_name}"
+            print(label)
             cv2.putText(frame, label, (x1, max(20, y1-6)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
