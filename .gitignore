@@ -1,3 +1,12 @@
-#all files ending .pt, .json for gitignore
+# YOLO / ML model weights
 *.pt
+
+# JSON configs / outputs
 *.json
+
+# Python cache
+__pycache__/
+tasks
+*.pyc
+*.pyo
+*.pyd

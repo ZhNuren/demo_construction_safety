@@ -6,6 +6,7 @@ from tasks.object_tracking import ObjectTrackingPage
 from tasks.face_id import FaceIDPage
 from tasks.lpr import LPRPage
 from tasks.crowd import CrowdPage
+from tasks.objects import ObjectsPage
 
 
 TASKS = [
@@ -84,6 +85,8 @@ class App(tk.Tk):
                 page = LPRPage(self.tabs)
             elif key == "Crowd Counting":
                 page = CrowdPage(self.tabs)
+            elif key == "Object Detection":
+                page = ObjectsPage(self.tabs)
             else:
                 page = TaskPage(self.tabs, key, title)
             self.pages[key] = page
