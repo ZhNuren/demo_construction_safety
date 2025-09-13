@@ -200,7 +200,7 @@ class CrowdPage(TaskPage):
             rh, rw = roi_frame.shape[:2]
             zoomed = cv2.resize(roi_frame, (int(rw * scale), int(rh * scale)), interpolation=cv2.INTER_CUBIC)
 
-            res = counter.detector.predict(zoomed, verbose=False, conf=0.4, device="mps", classes=[0])[0]
+            res = counter.detector.predict(zoomed, verbose=False, conf=0.3, device="mps", classes=[0])[0]
             det_boxes = res.boxes.xyxy.cpu().numpy().astype(int).tolist()
 
             # map boxes back to full-frame coordinates
@@ -219,7 +219,7 @@ class CrowdPage(TaskPage):
 
         else:
             # full-frame detection
-            res = counter.detector.predict(frame, verbose=False, conf=0.4, device="mps", classes=[0])[0]
+            res = counter.detector.predict(frame, verbose=False, conf=0.3, device="mps", classes=[0])[0]
             boxes = res.boxes.xyxy.cpu().numpy().astype(int).tolist()
             num_people = len(boxes)
             # draw person boxes (green)

@@ -83,7 +83,7 @@ class ObjectTrackingPage(TaskPage):
                 except Exception:
                     device = "cpu"
 
-                self._detector = YOLODetector("yolo11x.pt", conf=0.35, imgsz=640, device=device)
+                self._detector = YOLODetector("yolo11x.pt", conf=0.3, imgsz=640, device=device)
                 if device == "mps":
                     self.notify("YOLO on MPS (Apple GPU)")
                 else:
