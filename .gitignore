@@ -6,7 +6,6 @@
 
 # Python cache
 __pycache__/
-tasks
 *.pyc
 *.pyo
 *.pyd
