@@ -2,3 +2,6 @@
 *.pt
 *.json
 videos/*
+*.mp4
+*.mov
+*jpg
